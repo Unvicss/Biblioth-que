@@ -1,0 +1,771 @@
+/* afin de faire fonctionner le programme il faut d'abord créer 3 fichiers manuellement sur l'ordinateur
+- le premier sous le nom de iden.txt (le fichier avec les nom d'utilisateurs / mot de passe / role / livres des utilisateurs)
+
+ident.txt
+
+martin pointeau 1 00 00 00 00 00
+carla jullien 1 00 00 00 00 00
+jean deux 2 00 00 00 00 00
+jack trois 2 00 00 00 00 00
+geo rge 1 00 00 00 00 00
+ba bo 1 00 00 00 00 00
+ri ck 2 00 00 00 00 00
+
+- le second sous le nom de heure.txt ( un fichier qui prend le nom d'utilisateurs et permettra de stocker les heures limite pour rendre chacun des livres )
+
+heure.txt
+
+martin 2111111111 2111111111 2111111111 2111111111 2111111111
+carla 2111111111 2111111111 2111111111 2111111111 2111111111
+jean 2111111111 2111111111 2111111111 2111111111 2111111111
+jack 2111111111 2111111111 2111111111 2111111111 2111111111
+geo 2111111111 2111111111 2111111111 2111111111 2111111111
+ba 2111111111 2111111111 2111111111 2111111111 2111111111
+ri 2111111111 2111111111 2111111111 2111111111 2111111111
+
+- le troisieme sous le nom de listelivre.txt (le fichier contenant la liste de livre, titre, auteur, categorie, numero, 
+et le numero permettant de savoir s'il sont disponibles ou non, 1 egale disponible, 0 = non disponible )
+
+listelivre.txt
+
+angor thilliez roman 11 1
+daddy durand roman 12 1
+grande_avenue fielding roman 13 1
+harry_potter_1 rollings roman 14 1
+harry_potter_2 rollings roman 15 1
+harry_potter_3 rollings roman 16 1
+harry_potter_4 rollings roman 17 1
+millenium_1 larsson roman 18 1
+millenium_2 larsson roman 19 1
+millenium_3 larsson roman 21 1
+millenium_4 larsson roman 22 1
+one_piece_1 oda manga 23 1
+one_piece_2 oda manga 24 1
+one_piece_3 oda manga 25 1
+one_piece_4 oda manga 26 1
+tintin_1 hergé bd 27 1
+tintin_2 hergé bd 28 1
+tintin_3 hergé bd 29 1
+tomie ito manga 31 1
+vernon_subutex despentes roman 32 1
+
+
+*/
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <math.h>
+#include <string.h>
+
+
+
+int main() {
+    int retard=0;// variable that says if the user is late
+    char nom_heure[20];//name of user in heure.txt
+    long hlpr,hlde,hltr,hlqu,hlci;// the time to return each book
+    int choixemprunt;// keep the choose of the user when he want to borrow
+    int tmp;// just for help
+    char titreprof[30];//teachers choose a title  for their book
+    char auteurprof[15];//teachers choose an autor for their book
+    char categorieprof[15];// teachers choose a category for their book
+    int i=(-1); // help variable
+  
+    char recherche_titre[30]; // for for book search
+    char recherche_auteur[15];// for book search
+    char recherche_categorie[15];// for book search
+    int fin=1;// for leave the library
+    int rendre;// the book the user want to return
+    int p=0;// help variable
+    int emprunt; //
+    int debut=0;// login / new user
+    int nblivre;// number of book in total
+    int numlivre; // number of teacher's new book
+    int numero;//  number of books
+    int nlivre; // the book he wants to borrow
+    int connexion_ok=0;// know if the position is okay
+    int curs=0;//cursor position in file
+    int utilisateurs =0;//cheak all fic iden
+    char id[20];// pseudo
+    char mdp[20];// password
+    char titre[30];// title of book
+    char auteur[15];// autor of each book
+    char categorie[15];// categories of book
+    int role =0;// if users IS a student or a prof
+    int choix = 0;// what the user wants to do
+    int ajout_livre=5;
+    int lpr, lde, ltr, lqu, lci;//schowes the numbers of books to borrow
+    char nom1[10]; //recover the name in ficid
+    char mdp1[10];//recover the name in ficid
+    printf("les règles de la bibliothèque sont:\n-un étudiant peut emprunter jusqu'à 3 livres qu'ils peuvent garder 2 minutes maximum.\n -Les professeurs peuvent emprunter maximum 5 livres pendant 3 minutes maximums.\n-En cas de retard vous ne pouvez pas réemprunter. \n -un professeur peut ajouter un livre\n\n");
+// display of rulers
+
+    FILE *fichheure = fopen("heure.txt","r+");//open fichheure for the rime
+    FILE *fichlivre = fopen("listelivre.txt","r+");
+    FILE *ficid = fopen("iden.txt","r+");//open iden.txt
+
+    if (fichheure==NULL) {//check if fichheure IS open
+        printf ("error");
+        exit(1);
+    }
+    if (ficid==NULL) {//check if ficid IS open
+        printf ("error");
+        exit(1);
+    }
+    if (fichlivre==NULL) {//check if fichlivre IS open
+        printf ("error");
+        exit(1);
+    }
+
+//we record the number of books in a vari
+    tmp=100;
+    nblivre=(-1);
+    while (numero!=tmp) {
+        tmp=numero;
+        fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+
+        nblivre=nblivre+1;
+    }
+//we recover the books and their associated information from the file then sale thing with identification
+    fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+     fscanf(ficid, "%s %s %d %d %d %d %d %d",nom1, mdp1, &role, &lpr,&lde,&ltr, &lqu, &lci);
+
+// we save the number to register if a book enters a new book
+    int aide_numlivre=0;
+    numlivre=0;
+    while (aide_numlivre<40) {
+        fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+        aide_numlivre=aide_numlivre+1;
+    }
+    numlivre=numero+1;
+    if (numlivre==40||numlivre==50||numlivre==60||numlivre==70||numlivre==80||numlivre==90) {
+        numlivre=numlivre+1;
+    }
+
+
+
+
+    printf("1. se conecter. \n 2. Nouvel utilisateur(e)");//choose between two options
+    scanf("%d",&debut);//get the choice
+    if(debut!= 1 && debut != 2) {
+        printf("invalide. Veuillez recompiller");//check if the answer IS ok
+        exit(1);
+
+    }
+    if ( debut ==2) {//inscription of a New users
+        printf (" êtes vous 1:professeur ou 2:étudiant ? \n");//choice role
+        scanf("%d",&role);
+
+        if(role != 1 && role != 2) {
+            printf("invalide. Veuillez recompiller");
+            exit(1);//check if the variable matches
+        }
+
+        printf("veuillez saisir votre identifiant (20 caractères maximums): \n" );//users choose a id
+        scanf("%s",id);
+
+        printf("veuillez saisir votre mot de passe (20 caractères maximums): \n" );//user choose a password
+        scanf("%s",mdp);
+
+
+        for (int i=0; i<100; i++) {
+            fscanf(ficid, "%s %s %d %d %d %d %d %d",nom1, mdp1, &role, &lpr,&lde,&ltr, &lqu, &lci);
+            if(strcmp(id,nom1)==0 || strcmp(mdp,mdp1)==0) {
+                printf("vous ne pouvez pas faire ce choix, veuillez recompiller");
+                exit(1);
+            }
+        }
+        rewind (ficid);
+        for (int i=0; i<30; i++) {
+            fscanf(ficid, "%s %s %d %d %d %d %d %d",nom1, mdp1, &role, &lpr,&lde,&ltr, &lqu, &lci);//retrieves the name the password and the empty borrowing slots
+        }
+        rewind(fichheure);
+        for (int i=0; i<30; i++) {
+            fscanf(fichheure, "%s %ld %ld %ld %ld %ld",nom1,&hlpr,&hlde,&hltr,&hlqu,&hlci);//enter the information in the file fichheure
+        }
+
+        fprintf(fichheure,"%s 2111111111 2111111111 2111111111 2111111111 2111111111",id);
+        fprintf(ficid, "\n %s %s %d 00 00 00 00 00", id, mdp, role );//ad information to ficid
+        rewind (ficid);//replace thé cursor
+        rewind(fichheure);//same
+        connexion_ok=1;//user note connected
+        printf("bienvenue sur votre profil\n");
+    }
+    if(debut==1) {//connexion
+        printf("quelle est votre pseudo ");
+        scanf(" %s",id);
+        printf("quelle est votre mdp ");//ask to the user a pseudo and password for connexion
+        scanf(" %s",mdp);
+        rewind(ficid);
+        while( utilisateurs <100) {
+            fscanf(ficid, "%s %s %d %d %d %d %d %d",nom1, mdp1, &role, &lpr,&lde,&ltr, &lqu, &lci); //eatch line is retrieved until the match
+            curs = ftell(ficid);
+            if(strcmp(id,nom1)==0) { //compares the nickname and password with all the ones in the file
+
+                if(strcmp(mdp,mdp1)==0) {
+
+                    printf("bienvenue sur votre profil\n");//if there is a match, we get out of the loop
+                    connexion_ok=1;
+                    break;
+                }
+                break;
+            }
+
+
+            utilisateurs= utilisateurs+1;//performs for utilisateur<100
+
+        }
+    }
+
+    if(connexion_ok!=1) {
+        printf("pas de correspondance, veuillez recompiler");
+        exit(1);// not correspondance 
+    }
+
+
+    rewind(fichheure);//replace thé curseur
+
+    for (int i=0; i<30; i++) {
+        fscanf(fichheure, "%s %ld %ld %ld %ld %ld",nom_heure,&hlpr,&hlde,&hltr,&hlqu,&hlci);//put the information in fichheure
+
+        if(strcmp(nom_heure,id)==0) {
+            break;
+        }
+    }
+
+    time_t t;
+    t = time(NULL);//t take thé Time of computer
+    time_t a=t+120;//a take t+120sc for student
+
+    if (((hlpr-t)<0)||((hlde-t)<0)||((hltr-t)<0)||((hlqu-t)<0)||((hlci-t)<0)) {
+        retard=1;//for eatch book check if Time IS okay. else : retard
+    }
+    if (((hlpr-t)>0)&&((hlde-t)>0)&&((hltr-t)>0)&&((hlqu-t)>0)&&((hlci-t)>0)) {
+        retard=0;//the Time IS ok
+    }
+
+
+
+    if(role==1) {//user IS a student
+        printf("voulez vous:\n 1:emprunter un livre \n 2: rendre un livre \n 3: voir vos livres déjà empruntés \n 4: se déconnecter");
+    }
+    if (role==2) {//user IS a professor
+        printf("voulez vous:\n 1:emprunter un livre \n 2: rendre un livre \n 3: voir vos livres déjà empruntés \n 4: se déconnecter \n 5:rentrer un nouveau livre");
+    }
+    scanf("%d",&choix);// choice between optinon
+    while(choix!=1 && choix!=2 &&choix!=3 &&choix!=4 && choix !=5) {
+        printf("erreur, veuillez ressaisir");//check if the variable IS okay
+        scanf("%d",&choix);//Ask thé choice
+    }
+        if (choix==1) {//borrows
+        if( retard==1) {//we can't borrow if late
+            printf("vous avez gardez vos livres trop longtemps vous ne pouvez plus empruntés");
+            exit(1);//else exit
+        }
+        if(role==1&&ltr!=0&&lde!=0&&lpr!=0) {//check if it's a student and if there are free placement
+            printf("vous ne pouvez plus emprunter, veuillez recompiler");//can't borrow
+            exit(1);
+        }
+
+        if(role==2&&ltr!=0&&lde!=0&&lpr!=0&&lci!=0&&lqu!=0) {// same thing for professor
+            printf("vous ne pouvez plus emprunter, veuillez recompiler");//if teacher has five book he can't
+            exit(1);
+        }
+
+        p=0;
+
+
+        rewind(fichlivre);
+        printf("entrez 100 si voulez vous voir tout les livres disponibles , entrez 10 si vous voulez faire une recherche par titre, 20 pour une recherche par auteur, 30 pour une recherche par categorie, entrez 0 si vous ne voulez plus emprunter\n");
+        scanf("%d",&choixemprunt);//Ask to user if hé want to see thé bibliotheque
+        if(choixemprunt==0) {
+            printf("veuillez recompiler");
+            exit(1);
+        }
+
+
+        if (choixemprunt==10) {//search a book by this name
+            printf("\nquel livre cherchez vous ?");
+            scanf("%s",recherche_titre);
+            for (int i=0; i<nblivre; i++) {
+            //recover Book in ficlivre
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+                if (strcmp(titre,recherche_titre)==0) {//if the user's choice corresponds to a book in the file keep it
+                    if(emprunt==1) {
+                        printf("%s %s %s %d",titre, auteur, categorie, numero);//Ask at thé user his choice
+                    }
+                }
+            }
+
+            printf("\naucun autre livre de ce titre n'est disponible");//there is no match
+        }
+
+        if (choixemprunt==20) {
+            printf("\nquel auteur cherchez vous ?");//search by the name of author
+            scanf("%s",recherche_auteur);
+            for (int i=0; i<nblivre; i++) {
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+                if (strcmp(auteur,recherche_auteur)==0) {//do a comparaison 
+                    if(emprunt==1) {
+                        printf("\n%s %s %s %d",titre, auteur, categorie, numero);//if there are a match display information of book
+                    }
+                }
+            }
+
+            printf("\naucun autre livre de cet(te) auteur(e) n'est disponible");
+        }
+
+
+        if (choixemprunt==30) {//search by the categoris and same thing
+            printf("\nquelle categorie cherchez vous ?");
+            scanf("%s",recherche_categorie);
+            for (int i=0; i<nblivre; i++) {
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+                if (strcmp(categorie,recherche_categorie)==0) {
+                    if(emprunt==1) {
+                        printf("\n%s %s %s %d",titre, auteur, categorie, numero);
+                    }
+                }
+            }
+
+            printf("\naucun autre livre de cette categorie n'est disponible");
+        }
+
+
+        if (choixemprunt==100) {//display tout les livres disponible
+            printf("les livres disponibles sont :");
+            while ( p<(nblivre)) {
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);//retrieve books from file
+                if(emprunt==1) {//if Book IS free
+                    printf("\n %s %s %s %d",titre, auteur, categorie, numero);
+                }//display thé Book with vos information
+                p=p+1;//for while
+            }
+        }
+
+        printf("\nentrez le numero du livre que vous voulez enprunter entrez 0 si vous ne voulez plus emprunter\n");
+
+
+        scanf("%d",&nlivre);//Ask thé number of book to borrow
+        if(nlivre==0) {//user note want to borrow
+            printf("veuillez recompiler");
+            exit(1);
+        }
+        printf("livre %d emprunté",nlivre);//confirm the borrowing of the book
+        rewind(fichlivre);
+        do {
+            fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+
+        } while (numero!=nlivre);//compare with Book of fichlivre
+
+
+        fseek(fichlivre, ftell(fichlivre)-1, SEEK_SET);
+        fprintf(fichlivre,"0");
+
+
+
+// we associate the book to the user in iden
+        rewind(ficid);
+        if(role==2) { //if user is a proffessor
+
+            if(lci==0&&lqu!=0) {
+                fseek(ficid, curs-2, SEEK_CUR);//if user has four book he can borrow on the 5th placement
+                fprintf(ficid,"%d",nlivre);
+            }
+            else {
+                if(lqu==0&&ltr!=0) {
+                    fseek(ficid, curs-5, SEEK_CUR);//if user has three book he can borrow on the 4th placement
+                    fprintf(ficid,"%d",nlivre);
+                }
+                else {
+                    if(ltr==0&& lde!=0) {
+                        fseek(ficid, curs-8, SEEK_CUR);//sale thing
+                        fprintf(ficid,"%d",nlivre);
+                    }
+                    else {
+                        if (lde==0&&lpr!=0) {
+                            fseek(ficid, curs-11, SEEK_CUR);//same thing
+                            fprintf(ficid,"%d",nlivre);
+                        }
+                        else {
+
+                            fseek(ficid, curs-14, SEEK_CUR);
+                            fprintf(ficid,"%d",nlivre);
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+        if(role==1) { //do the same thing but for student
+
+            if(ltr==0&& lde!=0) {
+                fseek(ficid, curs-8, SEEK_CUR);
+                fprintf(ficid,"%d",nlivre);
+            }
+            else {
+                if (lde==0&&lpr!=0) {
+                    fseek(ficid, curs-11, SEEK_CUR);
+                    fprintf(ficid,"%d",nlivre);
+                }
+                else {
+
+                    fseek(ficid, curs-14, SEEK_CUR);
+                    fprintf(ficid,"%d",nlivre);
+                }
+            }
+        }
+
+
+
+        rewind(fichheure);
+
+        for (int i=0; i<30; i++) {
+            fscanf(fichheure, "%s %ld %ld %ld %ld %ld",nom_heure,&hlpr,&hlde,&hltr,&hlqu,&hlci);//retrieve the information of the borrowed book in fichheure
+         if(strcmp(nom_heure,id)==0) {
+                break;
+            }
+        }
+
+        time_t t;
+        t = time(NULL);//t takes the value of computer time
+
+        time_t a=t+120;// a take t+120sc
+        printf(" a rendre dans %ld secondes",(a-t));
+        if(lpr==0) {
+            fseek(fichheure, ftell(fichheure)-54, SEEK_SET);
+            fprintf(fichheure,"%ld",a);
+            exit(1);
+        }
+
+        if(lde==0) {
+            fseek(fichheure, ftell(fichheure)-43, SEEK_SET);
+            fprintf(fichheure,"%ld",a);
+            exit(1);
+        }
+
+        if(ltr==0) {
+            fseek(fichheure, ftell(fichheure)-32, SEEK_SET);
+            fprintf(fichheure,"%ld",a);
+            exit(1);
+        }
+
+        if(lqu==0) {
+            fseek(fichheure, ftell(fichheure)-21, SEEK_SET);
+            fprintf(fichheure,"%ld",a);
+            exit(1);
+        }
+        if(lci==0) {
+            fseek(fichheure, ftell(fichheure)-10, SEEK_SET);
+            fprintf(fichheure,"%ld",a);
+            exit(1);
+        }
+
+        printf(" veuillez recompiler");
+        exit(1);
+    }
+    if (choix==2) {// return a book
+        rewind(fichheure);//put the cursor at thé begining of fichheur
+
+        for (int i=0; i<30; i++) {
+            fscanf(fichheure, "%s %ld %ld %ld %ld %ld",nom_heure,&hlpr,&hlde,&hltr,&hlqu,&hlci);
+
+            if(strcmp(nom_heure,id)==0) {
+                break;
+            }
+        }
+
+        time_t t;
+        t = time(NULL);
+
+
+        if(lpr==0&&lde==0&&ltr==0&&lqu==0&&lci==0) {//we check if the user has books
+            printf("\nvous ne possédez pas de livre veuillez recompiler");
+            exit(1);
+        }
+        rewind(fichlivre);
+
+
+        if(lpr!=0) {//same thing
+            do {
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+            } while(lpr!=numero);
+            printf("\nvous possedez %s %s %s :%d a rendre dans %ld secondes",titre, auteur, categorie, numero, (hlpr-t));
+            if((hlpr-t)<0) {
+                printf(" vous etes en retard");
+                retard=1;
+            }
+        }
+        rewind(fichlivre);
+
+
+        if(lde!=0) {//same thing
+            do {
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+            } while (lde!=numero);
+            printf("\nvous possedez %s %s %s :%d a rendre dans %ld secondes",titre, auteur, categorie, numero, (hlde-t));
+            if((hlpr-t)<0) {
+                printf(" vous etes en retard");
+                retard=1;
+            }
+        }
+        rewind(fichlivre);
+
+
+        if(ltr!=0) {//same thing
+            do {
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+            } while (ltr!=numero);
+            printf("\nvous possedez %s %s %s :%d a rendre dans %ld secondes",titre, auteur, categorie, numero, (hltr-t));
+            if((hlpr-t)<0) {
+                printf(" vous etes en retard");
+                retard=1;
+            }
+        }
+        rewind(fichlivre);
+
+
+        if(lqu!=0) {//same thing
+            do {
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+            } while (lqu!=numero);
+            printf("\nvous possedez %s %s %s :%d a rendre dans %ld secondes",titre, auteur, categorie, numero, (hlqu-t));
+            if((hlpr-t)<0) {
+                printf(" vous etes en retard");
+                retard=1;
+            }
+        }
+        rewind(fichlivre);
+
+
+        if(lci!=0) {//same thing for last book
+            do {
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+            } while (lci!=numero, (hlci-t));
+            printf("\nvous possedez %s %s %s :%d a rendre dans %ld secondes",titre, auteur, categorie, numero);
+            if((hlpr-t)<0) {
+                printf(" vous etes en retard");
+                retard=1;
+            }
+
+
+
+        }
+
+        rewind(fichlivre);
+
+
+        while (1) {//Ask to users the number of book at return
+            printf("\nentrez le numero du livre que vous voulez rendre, entrez 0 quand vous ne voulez plus rendre");
+            scanf("%d",&rendre);
+
+            if (rendre==0) {
+                printf("\nveuillez recompiler");
+                exit(1);//exit program
+            }
+
+
+            if (rendre!=lpr&&rendre!=lde&&rendre!=ltr&&rendre!=lqu&&rendre!=lci) {
+                printf("\npas de correspondance veuillez recompiler");//check if thé Book has really be borrow
+                exit(1);//Else exit of program
+            }
+            rewind(fichlivre);
+
+
+            if(rendre==lpr) { //compares the book to be returned with those to borrow
+                do {
+                    fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+
+                } while (numero!=rendre);
+                fseek(fichheure, ftell(fichheure)-54, SEEK_SET);
+                fprintf(fichheure,"2111111111");//adapte the Time file
+
+                fseek(fichlivre, ftell(fichlivre)-1, SEEK_SET);
+                fprintf(fichlivre,"1");//change the number of emprunt in fichlivre
+
+
+
+                fseek(ficid, curs-14, SEEK_SET);//moves the cursor to the book to return
+                fprintf(ficid,"00");//change the number of emprunt in dicid
+                printf("\n livre %d bien rendu",rendre);
+            }
+//return the book
+
+
+            if(rendre==lde) {// same thing for livre 2
+                rewind(fichlivre);
+                do {
+                    fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+
+                } while (numero!=rendre);
+
+                fseek(fichheure, ftell(fichheure)-43, SEEK_SET);
+                fprintf(fichheure,"2111111111");
+
+                fseek(fichlivre, ftell(fichlivre)-1, SEEK_SET);
+                fprintf(fichlivre,"1");
+                fseek(ficid, curs-11,SEEK_SET);
+                fprintf(ficid,"00");
+                printf("\n livre %d bien rendu",rendre);
+            }
+
+
+            if(rendre==ltr) {// same thing for livre 3
+                rewind(fichlivre);
+                do {
+                    fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+
+                } while (numero!=rendre);
+
+                fseek(fichheure, ftell(fichheure)-32, SEEK_SET);
+                fprintf(fichheure,"2111111111");
+
+                fseek(fichlivre, ftell(fichlivre)-1, SEEK_SET);
+                fprintf(fichlivre,"1");
+                fseek(ficid, curs-8, SEEK_SET);
+                fprintf(ficid,"00");
+                printf("\n livre %d bien rendu",rendre);
+            }
+
+
+            if(rendre==lqu) {// same thing for livre 4
+                rewind(fichlivre);
+                do {
+                    fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+
+                } while (numero!=rendre);
+
+                fseek(fichheure, ftell(fichheure)-21, SEEK_SET);
+                fprintf(fichheure,"2111111111");
+
+                fseek(fichlivre, ftell(fichlivre)-1, SEEK_SET);
+                fprintf(fichlivre,"1");
+                fseek(ficid, curs-5, SEEK_SET);
+                fprintf(ficid,"00");
+                printf("\n livre %d bien rendu",rendre);
+            }
+
+
+            if(rendre==lci) {// same thing for livre 5
+                rewind(fichlivre);
+                do {
+                    fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+
+                } while (numero!=rendre);
+
+                fseek(fichheure, ftell(fichheure)-10, SEEK_SET);
+                fprintf(fichheure,"2111111111");
+
+                fseek(fichlivre, ftell(fichlivre)-1, SEEK_SET);
+                fprintf(fichlivre,"1");
+                fseek(ficid, curs-2, SEEK_SET);
+                fprintf(ficid,"00");
+                printf("\n livre %d bien rendu",rendre);
+            }
+
+        }
+    }
+    rewind(fichlivre);//move cursor
+        if(choix==3) {// display book's borrow
+        if(lpr==0&&lde==0&&ltr==0&&lqu==0&&lci==0){//check if user borrow some book
+            printf("vous ne possédez pas de livre veuillez recompiler");
+            exit(1);//else exit
+        }
+        rewind(fichlivre);
+        if(lpr!=0) {//check if slot 1 is occupied
+            do {
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);//look at a correspondence in ficlivre
+            } while(lpr!=numero);
+            printf("\nvous possedez %s %s %s :%d a rendre dans %ld secondes",titre, auteur, categorie, numero, (hlpr-t));
+            if((hlpr-t)<0) {//if no respect of Time retard=1
+                printf("vous etes en retard");
+                retard=1;
+            }
+        }
+        rewind(fichlivre);
+
+
+        if(lde!=0) {//same for placement 2
+            do {
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+            } while (lde!=numero);
+            printf("\nvous possedez %s %s %s :%d a rendre dans %ld secondes",titre, auteur, categorie, numero, (hlde-t));
+            if((hlpr-t)<0) {
+                printf("vous etes en retard");
+                retard=1;
+            }
+        }
+        rewind(fichlivre);
+
+
+        if(ltr!=0) {//same for placement 3
+            do {
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+            } while (ltr!=numero);
+            printf("\nvous possedez %s %s %s :%d a rendre dans %ld secondes",titre, auteur, categorie, numero, (hltr-t));
+            if((hlpr-t)<0) {
+                printf("vous etes en retard");
+                retard=1;
+            }
+        }
+        rewind(fichlivre);
+
+
+        if(lqu!=0) {//same for placement 4
+            do {
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+            } while (lqu!=numero);
+            printf("\nvous possedez %s %s %s :%d a rendre dans %ld secondes",titre, auteur, categorie, numero, (hlqu-t));
+            if((hlpr-t)<0) {
+                printf("vous etes en retard");
+                retard=1;
+            }
+        }
+        rewind(fichlivre);
+
+
+        if(lci!=0) {//same for placement 5
+            do {
+                fscanf(fichlivre, "%s %s %s %d %d",titre, auteur, categorie, &numero, &emprunt);
+            } while (lci!=numero, (hlci-t));
+            printf("\nvous possedez %s %s %s :%d a rendre dans %ld secondes",titre, auteur, categorie, numero);
+            if((hlpr-t)<0) {
+                printf("vous etes en retard");
+                retard=1;
+            }
+        }
+
+        printf("\nentrez 0 pour sortir du programme. Vous devrez recompiler");
+        scanf("%d",&fin);
+
+        if (fin==0) {//end of action
+            exit(1);
+        }
+    }
+   if (choix==4) {//Sign out
+        printf("a bientot sur notre bibliothèque, passez une bonne journée!");
+        exit(1);
+    }
+    if (choix==5) {//add a book
+        if (role==1) {//check if it's a student
+            printf("commande interdite, veuillez recompiler");
+            exit(1);//interdiction exit 
+        }
+
+        printf("entrez le titre du livre que vous voulez rentrer (mettez des _ a la place des espaces svp)");
+        scanf("%s",titreprof);//professer put the name of tche book
+        printf("entrez l'auteur du livre que vous voulez rentrer (mettez des _ a la place des espaces svp)");
+        scanf("%s",auteurprof);//tell author
+        printf("entrez la categorie du livre que vous voulez rentrer (mettez des _ a la place des espaces svp)");
+        scanf("%s",categorieprof);//tell categoris
+        fseek(fichlivre,0,SEEK_END);
+        fprintf(fichlivre,"%s %s %s %d 1",titreprof,auteurprof,categorieprof, numlivre);//add to ficlivre
+        printf("livre bien enregistré, veuillez recompiler");
+        exit(1);//end of action
+
+    }
+return 0;
+}
